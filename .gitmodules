@@ -1,0 +1,6 @@
+[submodule "components/providore"]
+	path = components/providore
+	url = git@github.com:madpilot/providore-esp-idf-component
+[submodule "components/wifi"]
+	path = components/wifi
+	url = git@github.com:madpilot/esp-idf-wifi

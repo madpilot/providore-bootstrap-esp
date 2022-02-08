@@ -1,0 +1,24 @@
+
+menu "Providore Bootstrap Options"
+  config WIFI_SSID
+    string "Access Point SSID"
+    default "Access Point"
+    help
+      Name of access point that the ESP32 accesses.
+  
+  config WIFI_PASSKEY
+    string "Access Point Passkey"
+    default "password"
+    help
+      Password of access point that the ESP32 accesses.    
+
+  config DEVICE_ID
+    string "Device ID"
+    help
+      Device ID used to identify the device to Providore.    
+  
+  config SHARED_KEY
+    string "Shared private key"
+    help
+      Device specific shared private key. Maximum 32 characters.
+  endmenu
