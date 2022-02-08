@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "wifi.h"
+#include "configuration.h"
 
 #ifdef CONFIG_SECURED_SHARED_KEY
 #include "esp32s2/rom/efuse.h"
@@ -14,27 +15,10 @@
 // HMAC
 #include "providore.h"
 
-static const char *TAG = "HTTP_CLIENT";
+static const char *TAG = "APP";
 
 void app_main(void)
 {
-#ifdef CONFIG_SECURED_SHARED_KEY
-    // Write the shared key to EFUSE
-    ets_status_t ets_status = ets_efuse_write_key(ETS_EFUSE_BLOCK_KEY4,
-                                                  ETS_EFUSE_KEY_PURPOSE_HMAC_UP,
-                                                  CONFIG_SHARED_KEY, strlen(CONFIG_SHARED_KEY));
-
-    if (ets_status == ESP_OK)
-    {
-        ESP_LOGI(TAG, "Key written!");
-    }
-    else
-    {
-        // writing key failed, maybe written already
-        ESP_LOGI(TAG, "Key not written: %i", ets_status);
-    }
-#endif
-
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES)
@@ -42,12 +26,26 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-    ESP_ERROR_CHECK(ret);
 
     if (providore_self_test_required())
     {
         providore_confirm_upgrade();
     }
+
+    char device_id[33];
+    size_t device_id_len;
+    char psk[33];
+    size_t psk_len;
+
+    bzero(&device_id, 33);
+    bzero(&psk, 33);
+
+    ESP_ERROR_CHECK(get_device_id((char *)&device_id, &device_id_len));
+    ESP_ERROR_CHECK(get_psk((char *)&psk, &psk_len));
+
+    // Force truncate if the strings are too long
+    device_id[33] = 0;
+    psk[33] = 0;
 
     wifi_init_sta(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSKEY);
     time_t now = time(&now);
@@ -64,7 +62,7 @@ void app_main(void)
         return;
     }
 
-    providore_err_t upgrade_result = providore_firmware_upgrade(CONFIG_DEVICE_ID);
+    providore_err_t upgrade_result = providore_firmware_upgrade(CONFIG_DEVICE_ID, CONFIG_SHARED_KEY);
     if (upgrade_result == PROVIDORE_OK)
     {
         ESP_LOGI(TAG, "Firmware upgraded!");

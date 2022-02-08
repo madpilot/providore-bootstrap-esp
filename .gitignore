@@ -1,3 +1,4 @@
 build/
+nvs/
 sdkconfig
 sdkconfig.old
