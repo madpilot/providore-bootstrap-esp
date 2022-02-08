@@ -1,11 +1,3 @@
-/* Hello World Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -15,7 +7,9 @@
 #include "nvs_flash.h"
 #include "wifi.h"
 
-// #include "esp32s2/rom/efuse.h"
+#ifdef CONFIG_SECURED_SHARED_KEY
+#include "esp32s2/rom/efuse.h"
+#endif
 
 // HMAC
 #include "providore.h"
@@ -24,19 +18,22 @@ static const char *TAG = "HTTP_CLIENT";
 
 void app_main(void)
 {
-    // ets_status_t ets_status = ets_efuse_write_key(ETS_EFUSE_BLOCK_KEY4,
-    //                                               ETS_EFUSE_KEY_PURPOSE_HMAC_UP,
-    //                                               key_data, sizeof(key_data));
+#ifdef CONFIG_SECURED_SHARED_KEY
+    // Write the shared key to EFUSE
+    ets_status_t ets_status = ets_efuse_write_key(ETS_EFUSE_BLOCK_KEY4,
+                                                  ETS_EFUSE_KEY_PURPOSE_HMAC_UP,
+                                                  CONFIG_SHARED_KEY, strlen(CONFIG_SHARED_KEY));
 
-    // if (ets_status == ESP_OK)
-    // {
-    //     ESP_LOGI(TAG, "Key written!");
-    // }
-    // else
-    // {
-    //     // writing key failed, maybe written already
-    //     ESP_LOGI(TAG, "Key not written :sad panda:: %i", ets_status);
-    // }
+    if (ets_status == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Key written!");
+    }
+    else
+    {
+        // writing key failed, maybe written already
+        ESP_LOGI(TAG, "Key not written: %i", ets_status);
+    }
+#endif
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
